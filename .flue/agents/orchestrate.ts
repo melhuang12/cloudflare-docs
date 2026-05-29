@@ -2,15 +2,21 @@
  * Orchestrator agent
  *
  * Receives GitHub webhooks (issues, pull_request events), verifies the
- * signature, and dispatches to the appropriate subagent.
+ * signature, and dispatches to the appropriate subagents:
  *
- * Today the only pipeline is `spam-and-off-topic-filter`. Future agents (triage,
- * code-review, …) can be added here by extending the routing logic below.
+ * - spam-and-off-topic-filter: runs on opened/reopened/synchronize/ready_for_review
+ * - code-review-orchestrator: runs on PR opened/reopened/synchronize/ready_for_review
+ *   (only if spam filter did not close the item)
  *
  * POST /agents/orchestrate/:id
  */
 import type { FlueContext } from "@flue/runtime";
-import { verifyGitHubSignature } from "../lib/github";
+import {
+	addReactionToComment,
+	getInstallationToken,
+	isCodeOwner,
+	verifyGitHubSignature,
+} from "../lib/github";
 
 export const triggers = { webhook: true };
 
@@ -49,7 +55,7 @@ export default async function ({ id, payload, env, req }: FlueContext) {
 	const webhookAction = body.action;
 	const number = getIssueOrPullRequestNumber(eventType, body);
 	const title = getIssueOrPullRequestTitle(eventType, body);
-	const itemUrl = getIssueOrPullRequestUrl(eventType, body, number);
+	const _itemUrl = getIssueOrPullRequestUrl(eventType, body, number);
 	const itemType = getIssueOrPullRequestLabel(eventType);
 	const sender = body.sender as Record<string, unknown> | undefined;
 	const senderLogin = sender?.login;
@@ -64,117 +70,305 @@ export default async function ({ id, payload, env, req }: FlueContext) {
 	// 	webhookAction,
 	// 	number,
 	// 	title,
-	// 	url: itemUrl,
 	// 	sender: senderLogin,
-	// 	senderType: sender?.type,
 	// 	action: "received",
 	// });
 
 	// ── 2. Route to the right pipeline ─────────────────────────────────────
-	const shouldFilter =
+	const isSpamFilterEvent =
 		["issues", "pull_request"].includes(eventType) &&
-		(["opened", "reopened"].includes(webhookAction as string) ||
+		(["opened", "reopened", "synchronize"].includes(webhookAction as string) ||
 			(eventType === "pull_request" && webhookAction === "ready_for_review"));
 
-	if (!req || !shouldFilter) {
-		// console.log({
-		// 	message: `GitHub webhook ignored: ${webhookLabel}`,
-		// 	event: "github_webhook_orchestrator",
-		// 	delivery,
-		// 	eventType,
-		// 	webhookAction,
-		// 	number,
-		// 	title,
-		// 	url: itemUrl,
-		// 	sender: senderLogin,
-		// 	action: "ignored",
-		// 	reason:
-		// 		"only issues/pull_request opened, reopened, and pull_request ready_for_review events are filtered",
-		// });
+	const isCodeReviewEvent =
+		eventType === "pull_request" &&
+		["opened", "reopened", "synchronize", "ready_for_review"].includes(
+			webhookAction as string,
+		);
+
+	// Slash commands: issue_comment on a PR from a codeowner
+	const commentBody = (body.comment as Record<string, unknown> | undefined)
+		?.body as string | undefined;
+	const trimmedComment = commentBody?.trim();
+	const isOnPullRequest =
+		eventType === "issue_comment" &&
+		webhookAction === "created" &&
+		(body.issue as Record<string, unknown> | undefined)?.pull_request !==
+			undefined;
+	const isFullReviewCommand =
+		isOnPullRequest && trimmedComment === "/full-review";
+	const isReviewCommand = isOnPullRequest && trimmedComment === "/review";
+
+	if (
+		!req ||
+		(!isSpamFilterEvent &&
+			!isCodeReviewEvent &&
+			!isFullReviewCommand &&
+			!isReviewCommand)
+	) {
 		return { acted: false, summary: "No action needed." };
 	}
 
-	// ── 3. Dispatch spam-and-off-topic-filter ───────────────────────────────
 	if (!number) {
-		// console.log({
-		// 	message: `GitHub webhook ignored: missing number for ${webhookLabel}`,
-		// 	event: "github_webhook_orchestrator",
-		// 	delivery,
-		// 	eventType,
-		// 	webhookAction,
-		// 	title,
-		// 	url: itemUrl,
-		// 	sender: senderLogin,
-		// 	action: "ignored",
-		// 	reason: "missing issue or PR number",
-		// });
 		return { acted: false, summary: "No issue or PR number found." };
 	}
 
-	const url = new URL(req.url);
-	url.pathname = `/agents/spam-and-off-topic-filter/${encodeURIComponent(id)}`;
-	const response = await fetch(url, {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ eventType, number }),
-	});
+	// ── 3. Handle /full-review command ──────────────────────────────────────
+	if (isFullReviewCommand) {
+		const commentId = (body.comment as Record<string, unknown> | undefined)
+			?.id as number | undefined;
 
-	if (!response.ok) {
-		console.log({
-			message: `Spam and off-topic filter dispatch failed: ${webhookLabel}`,
-			event: "github_webhook_orchestrator",
-			delivery,
-			eventType,
-			webhookAction,
-			number,
-			title,
-			url: itemUrl,
-			sender: senderLogin,
-			action: "dispatch_failed",
-			status: response.status,
+		if (!commentId || !senderLogin) {
+			return { acted: false, summary: "Missing comment id or sender." };
+		}
+
+		const typedEnv = env as Record<string, string>;
+		const token = await getInstallationToken(typedEnv);
+		const orgToken = typedEnv.GITHUB_ORG_TOKEN ?? "";
+		const codeowner = await isCodeOwner(token, orgToken, senderLogin as string);
+
+		if (!codeowner) {
+			console.log({
+				message: `Full review command ignored — ${senderLogin} is not a codeowner`,
+				event: "github_webhook_orchestrator",
+				delivery,
+				number,
+				action: "full_review_ignored_not_codeowner",
+			});
+			return { acted: false, summary: "Commenter is not a codeowner." };
+		}
+
+		// Acknowledge immediately with 👀 so the user knows we saw it
+		const eyesReactionId = await addReactionToComment(token, commentId, "eyes");
+
+		// Dispatch full review, passing comment info so orchestrator can swap reaction
+		const baseUrl = new URL(req.url);
+		const reviewUrl = new URL(baseUrl);
+		reviewUrl.pathname = `/agents/code-review-orchestrator/${encodeURIComponent(id)}`;
+		const _reviewResponse = await fetch(reviewUrl, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				eventType: "pull_request",
+				number,
+				forceFullReview: true,
+				bypassReviewLimit: true,
+				triggerCommentId: commentId,
+				triggerEyesReactionId: eyesReactionId,
+			}),
 		});
-		throw new Error(
-			`Spam and off-topic filter failed: ${response.status} ${await response.text()}`,
-		);
+
+		// console.log({
+		// 	message: `Full review dispatched by ${senderLogin}: PR #${number}`,
+		// 	event: "github_webhook_orchestrator",
+		// 	delivery,
+		// 	number,
+		// 	action: "full_review_dispatched",
+		// 	ok: reviewResponse.ok,
+		// });
+
+		return {
+			acted: true,
+			summary: `Full review triggered by @${senderLogin}.`,
+		};
 	}
 
-	const result = (await response.json()) as {
-		result?: unknown;
-		_meta?: { runId?: string };
-	};
-	const filterResult = result.result as {
-		closed?: boolean;
-		is_spam?: boolean;
-		confidence?: string;
-		reason?: string;
-	};
-	const filterOutcome = filterResult.closed ? "Closed" : "Left open";
-	console.log({
-		message: `${itemType} ${filterOutcome}: ${itemLabel}`,
-		event: "github_webhook_orchestrator",
-		delivery,
-		eventType,
-		webhookAction,
-		number,
-		title,
-		url: itemUrl,
-		sender: senderLogin,
-		action: "dispatched",
-		filterRunId: result._meta?.runId,
-		closed: filterResult.closed,
-		is_spam: filterResult.is_spam,
-		confidence: filterResult.confidence,
-		reason: filterResult.reason,
-	});
+	// ── 4. Handle /review command ────────────────────────────────────────────
+	if (isReviewCommand) {
+		const commentId = (body.comment as Record<string, unknown> | undefined)
+			?.id as number | undefined;
 
-	return result;
+		if (!commentId || !senderLogin) {
+			return { acted: false, summary: "Missing comment id or sender." };
+		}
+
+		const typedEnv = env as Record<string, string>;
+		const token = await getInstallationToken(typedEnv);
+		const orgToken = typedEnv.GITHUB_ORG_TOKEN ?? "";
+		const codeowner = await isCodeOwner(token, orgToken, senderLogin as string);
+
+		if (!codeowner) {
+			console.log({
+				message: `Review command ignored — ${senderLogin} is not a codeowner`,
+				event: "github_webhook_orchestrator",
+				delivery,
+				number,
+				action: "review_ignored_not_codeowner",
+			});
+			return { acted: false, summary: "Commenter is not a codeowner." };
+		}
+
+		// Acknowledge immediately with 👀
+		const eyesReactionId = await addReactionToComment(token, commentId, "eyes");
+
+		// Dispatch a normal review (incremental if prior review exists, full if not)
+		const baseUrl = new URL(req.url);
+		const reviewUrl = new URL(baseUrl);
+		reviewUrl.pathname = `/agents/code-review-orchestrator/${encodeURIComponent(id)}`;
+		const _reviewResponse = await fetch(reviewUrl, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				eventType: "pull_request",
+				number,
+				bypassReviewLimit: true,
+				triggerCommentId: commentId,
+				triggerEyesReactionId: eyesReactionId,
+			}),
+		});
+
+		// console.log({
+		// 	message: `Review dispatched by ${senderLogin}: PR #${number}`,
+		// 	event: "github_webhook_orchestrator",
+		// 	delivery,
+		// 	number,
+		// 	action: "review_dispatched",
+		// 	ok: reviewResponse.ok,
+		// });
+
+		return { acted: true, summary: `Review triggered by @${senderLogin}.` };
+	}
+
+	const baseUrl = new URL(req.url);
+	const results: Record<string, unknown> = {};
+
+	// ── 5. Dispatch spam-and-off-topic-filter (issues + PRs on open/reopen) ─
+	if (isSpamFilterEvent) {
+		// Skip spam filter for codeowners — their issues and PRs are never spam.
+		let skipSpamFilter = false;
+		if (senderLogin) {
+			const typedEnv = env as Record<string, string>;
+			const token = await getInstallationToken(typedEnv);
+			const orgToken = typedEnv.GITHUB_ORG_TOKEN ?? "";
+			skipSpamFilter = await isCodeOwner(
+				token,
+				orgToken,
+				senderLogin as string,
+			);
+		}
+
+		if (skipSpamFilter) {
+			// console.log({
+			// 	message: `Spam filter skipped — ${senderLogin} is a codeowner: ${itemLabel}`,
+			// 	event: "github_webhook_orchestrator",
+			// 	delivery,
+			// 	number,
+			// 	action: "spam_filter_skipped_codeowner",
+			// });
+			results.spamFilter = { result: { closed: false }, skipped: true };
+		} else {
+			const filterUrl = new URL(baseUrl);
+			filterUrl.pathname = `/agents/spam-and-off-topic-filter/${encodeURIComponent(id)}`;
+			const filterResponse = await fetch(filterUrl, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ eventType, number }),
+			});
+
+			if (!filterResponse.ok) {
+				console.log({
+					message: `Spam filter dispatch failed: ${webhookLabel}`,
+					event: "github_webhook_orchestrator",
+					delivery,
+					eventType,
+					webhookAction,
+					number,
+					action: "spam_filter_dispatch_failed",
+					status: filterResponse.status,
+				});
+				throw new Error(
+					`Spam and off-topic filter failed: ${filterResponse.status} ${await filterResponse.text()}`,
+				);
+			}
+
+			const filterResult = (await filterResponse.json()) as {
+				result?: {
+					closed?: boolean;
+					is_spam?: boolean;
+					confidence?: string;
+					reason?: string;
+				};
+				_meta?: { runId?: string };
+			};
+			const closed = filterResult.result?.closed ?? false;
+			// console.log({
+			// 	message: `${itemType} ${closed ? "closed" : "left open"}: ${itemLabel}`,
+			// 	event: "github_webhook_orchestrator",
+			// 	delivery,
+			// 	eventType,
+			// 	webhookAction,
+			// 	number,
+			// 	action: "spam_filter_dispatched",
+			// 	filterRunId: filterResult._meta?.runId,
+			// 	closed,
+			// 	is_spam: filterResult.result?.is_spam,
+			// 	confidence: filterResult.result?.confidence,
+			// 	reason: filterResult.result?.reason,
+			// });
+			results.spamFilter = filterResult;
+
+			// If spam filter closed the item, skip code review
+			if (closed) {
+				return results;
+			}
+		} // end else (not skipSpamFilter)
+	}
+
+	// ── 6. Dispatch code-review-orchestrator (PRs only) ─────────────────────
+	if (isCodeReviewEvent) {
+		// Suppress code review on draft PRs unless the action is ready_for_review
+		const isDraft =
+			(body.pull_request as Record<string, unknown> | undefined)?.draft ===
+			true;
+		if (!isDraft || webhookAction === "ready_for_review") {
+			const reviewUrl = new URL(baseUrl);
+			reviewUrl.pathname = `/agents/code-review-orchestrator/${encodeURIComponent(id)}`;
+			const reviewResponse = await fetch(reviewUrl, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ eventType: "pull_request", number }),
+			});
+
+			if (!reviewResponse.ok) {
+				// Code review failure is non-fatal — log and continue
+				console.log({
+					message: `Code review dispatch failed: ${webhookLabel}`,
+					event: "github_webhook_orchestrator",
+					delivery,
+					eventType,
+					webhookAction,
+					number,
+					action: "code_review_dispatch_failed",
+					status: reviewResponse.status,
+				});
+			} else {
+				const reviewResult = (await reviewResponse.json()) as {
+					result?: unknown;
+					_meta?: { runId?: string };
+				};
+				// console.log({
+				// 	message: `Code review dispatched: ${itemLabel}`,
+				// 	event: "github_webhook_orchestrator",
+				// 	delivery,
+				// 	eventType,
+				// 	webhookAction,
+				// 	number,
+				// 	action: "code_review_dispatched",
+				// 	reviewRunId: reviewResult._meta?.runId,
+				// });
+				results.codeReview = reviewResult;
+			}
+		}
+	}
+
+	return results;
 }
 
 function getIssueOrPullRequestNumber(
 	eventType: string,
 	body: Record<string, unknown>,
 ) {
-	if (eventType === "issues") {
+	if (eventType === "issues" || eventType === "issue_comment") {
 		return (body.issue as Record<string, unknown> | undefined)?.number as
 			| number
 			| undefined;
@@ -215,6 +409,7 @@ function getIssueOrPullRequestUrl(
 function getIssueOrPullRequestLabel(eventType: string) {
 	if (eventType === "pull_request") return "PR";
 	if (eventType === "issues") return "Issue";
+	if (eventType === "issue_comment") return "PR";
 	return "GitHub webhook";
 }
 
@@ -222,7 +417,7 @@ function getIssueOrPullRequestTitle(
 	eventType: string,
 	body: Record<string, unknown>,
 ) {
-	if (eventType === "issues") {
+	if (eventType === "issues" || eventType === "issue_comment") {
 		return (body.issue as Record<string, unknown> | undefined)?.title as
 			| string
 			| undefined;
