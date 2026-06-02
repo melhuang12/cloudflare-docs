@@ -21,13 +21,13 @@ This reference architecture extends the [AI Vibe Coding Platform](/reference-arc
 
 ## Core architecture
 
-An enterprise vibe coding platform consists of three components where existing enterprise controls can be layered or integrated as required:
+An enterprise vibe coding platform consists of three components where existing enterprise controls can be layered or extended as required:
 
-- **Development plane:** Where vibe coders create and iterate on applications through AI, following a governed process with controlled access to LLMs and enterprise data.
+- **Development plane:** Where vibe coders create and iterate on applications through AI, with controlled access to LLMs and enterprise data.
 - **Deployment pipeline:** The approval and validation workflow that promotes an application from development to production, including security checks, dependency scans, and human-in-the-loop review where required.
 - **Production plane:** Where approved applications run in isolated, multi-tenant environments with full observability, egress controls, and access policies.
 
-Observability, discoverability, and cost controls are embedded across all three components. [Resource tagging](/resource-tagging/) applied across the lifecycle provides visibility, allowing platform administrators to find all applications, users, and resources in one place.
+Observability, discoverability, and cost controls should be embedded across all three components. [Resource tagging](/resource-tagging/) applied across the lifecycle provides visibility, allowing platform administrators to track all applications, users, and resources in one place.
 
 <VibeCoreDiagram />
 
@@ -35,21 +35,21 @@ Observability, discoverability, and cost controls are embedded across all three 
 
 <VibeDevPlaneDiagram />
 
-[Cloudflare Access](/cloudflare-one/policies/access/) protects the entrypoint to the platform, whether that is a web-based user interface or authenticated access to a coding harness through the CLI. The platform stores metadata (user profiles, sessions, cost tags, department and team permissions) in a data store such as [D1](/d1/) for structured queries, [KV](/kv/) for fast key-value lookups, or [Durable Objects](/durable-objects/) for real-time coordination. The frontend or agent flow queries this metadata to determine permissions and track usage.
+[Cloudflare Access](/cloudflare-one/policies/access/) protects the entrypoint to the platform, whether that is a web-based user interface or authenticated access to a coding harness through the CLI. The platform stores metadata such as user profiles, sessions, cost tags, department and team permissions in a data store such as [D1](/d1/) for structured queries, [KV](/kv/) for fast key-value lookups, or [R2](/r2/) for object storage. The frontend or agent flow queries this metadata to determine permissions and track usage.
 
-The development flow supports two paths. A multi-agent orchestration flow can spin up a [Sandbox](/sandbox/) with preview URLs, accelerating the feedback loop during iteration. Alternatively, developers can work directly from the frontend to a coding harness running entirely inside a sandboxed [Container](/containers/).
+The development flow can be enabled in two ways: a multi-agent orchestration flow can spin up a [Sandbox](/sandbox/) with preview URLs, accelerating the feedback loop during iteration. Alternatively, developers can work directly from the frontend to a coding harness running entirely inside a sandboxed [Container](/containers/).
 
-All LLM interactions are tracked and managed through [AI Gateway](/ai-gateway/), which provides provider routing, cost controls, prompt logging, and [DLP inspection](/cloudflare-one/policies/data-loss-prevention/). AI Gateway gives administrators a single endpoint that routes to approved providers (OpenAI, Anthropic, Google, [Workers AI](/workers-ai/)), making it straightforward to swap models without changing application code. Token-level [cost tracking](/ai-gateway/observability/costs/) attributes usage to teams, departments, and individual users.
+All LLM interactions are tracked and managed through [AI Gateway](/ai-gateway/), which provides provider routing, cost controls, prompt logging, and [DLP inspection](/cloudflare-one/policies/data-loss-prevention/) in a centralized manner. Token-level [cost tracking](/ai-gateway/observability/costs/) attributes usage to projects, teams, departments, and individual users.
 
-All egress from the development environment is managed by an [outbound worker](/cloudflare-for-platforms/workers-for-platforms/configuration/outbound-workers/), where secrets are injected and outbound traffic is controlled. Through this outbound worker, platform administrators can apply [bindings](/workers/runtime-apis/bindings/), provide access to external APIs, or connect [Hyperdrive](/hyperdrive/) for non-Cloudflare databases. For access to on-premises or internal systems, [Cloudflare Tunnel](/cloudflare-one/connections/connect-networks/) establishes private connectivity without exposing those systems to the Internet.
+All egress from the development sandboxed container is managed by an [outbound handler](/containers/platform-details/outbound-traffic/), where outbound traffic is controlled. Through this outbound handler, platform administrators can allow or deny specific origin destinations, inject authorization headers or tokens, reroute traffic, apply custom policies on outbound traffic, or connect to other Cloudflare resources through [bindings](/workers/runtime-apis/bindings/). For access to on-premises or internal systems, [Cloudflare Tunnel](/cloudflare-one/connections/connect-networks/) establishes private connectivity without exposing those systems to the Internet.
 
-Additional security controls can be layered into the development container through package version locking and organizational controls baked into the container image. If the harness uses MCP, [MCP portals](/cloudflare-one/access-controls/ai-controls/mcp-portals/) can track tool usage across agent interactions.
+Additional security controls can be layered into the development container through package version locking and organizational controls baked into the container image. If the harness uses MCP servers, [MCP portals](/cloudflare-one/access-controls/ai-controls/mcp-portals/) can track tool usage across agent interactions.
 
 ## Deployment pipeline
 
 <VibeDeployPipelineDiagram />
 
-Assets produced by the development plane can be stored in existing enterprise code repositories or in [Artifacts](/artifacts/), Cloudflare's git-compatible storage. Teams can embed vibe-coded output into existing code review flows to ensure best practices and development controls are applied before promotion to production.
+Assets produced by the development plane can be stored in existing enterprise code repositories or in [Artifacts](/artifacts/), Cloudflare's git-compatible storage. Teams can embed vibe-coded output into existing code review flows to ensure best practices and development controls are applied before the application is deployed to production.
 
 The platform integrates with existing enterprise tooling. Git repositories, secret stores, and CI/CD pipelines can all be used alongside Cloudflare-native services.
 
@@ -59,13 +59,13 @@ The platform integrates with existing enterprise tooling. Git repositories, secr
 
 Deployed applications run on [Workers for Platforms](/cloudflare-for-platforms/workers-for-platforms/). [Cloudflare Access](/cloudflare-one/policies/access/) sits in front of the entire custom domain, controlling access to deployed applications through the [dispatch worker](/cloudflare-for-platforms/workers-for-platforms/get-started/dynamic-dispatch/). Granular access controls can be applied at the dispatch worker level to ensure user access matches the data permissions and scope they were assigned.
 
-Workers for Platforms user workers host the vibe-coded application, with the [outbound worker](/cloudflare-for-platforms/workers-for-platforms/configuration/outbound-workers/) controlling all egress and injecting secrets as required. The outbound worker also controls downstream access: [bindings](/workers/runtime-apis/bindings/), external APIs, [Hyperdrive](/hyperdrive/) for non-Cloudflare databases, or [Workers VPC](/workers/configuration/vpc/) with [Cloudflare Tunnel](/cloudflare-one/connections/connect-networks/) to establish connectivity to on-premises or existing internal systems.
+Workers for Platforms user workers host the vibe-coded application, with the [outbound worker](/cloudflare-for-platforms/workers-for-platforms/configuration/outbound-workers/) controlling all egress and injecting secrets as required. The outbound worker also controls downstream access: [bindings](/workers/runtime-apis/bindings/), external APIs, [Hyperdrive](/hyperdrive/) for non-Cloudflare relational databases, or [Workers VPC](/workers/configuration/vpc/) with [Cloudflare Tunnel](/cloudflare-one/connections/connect-networks/) to establish connectivity to on-premises or existing internal systems.
 
-Each user worker gets its own set of [bindings](/cloudflare-for-platforms/workers-for-platforms/configuration/bindings/) attached via the upload API. For complete isolation, the platform creates and attaches a unique D1 database, KV namespace, or R2 bucket per application. No user worker can access resources that are not explicitly bound to it.
+Each user worker gets its own set of [bindings](/cloudflare-for-platforms/workers-for-platforms/configuration/bindings/) to provide storage and services to each vibe-coded application. For complete per-tenant isolation, the platform creates and attaches a unique D1 database, KV namespace, or R2 bucket per application. No user worker can access resources that are not explicitly bound to it.
 
 The dispatch worker sets [custom limits](/cloudflare-for-platforms/workers-for-platforms/configuration/custom-limits/) per invocation, capping `cpuMs` and `subRequests` to prevent compute abuse. The platform can assign different limits by user tier, team, or application classification. If a limit is exceeded, the user worker throws an exception that the dispatch worker can handle.
 
-Observability operates at two levels. At the platform level, [Workers Trace Events Logpush](/cloudflare-for-platforms/workers-for-platforms/configuration/observability/) enabled on the dispatch worker covers all current and future user workers in the namespace, forwarding logs to external destinations like S3, R2, Datadog, or Splunk. The [GraphQL Analytics API](/analytics/graphql-api/) queries by `dispatchNamespaceName` for aggregate metrics across the platform. At the app level, [Tail Workers](/cloudflare-for-platforms/workers-for-platforms/configuration/observability/) can be attached to individual user workers for granular logging. [Workers Analytics Engine](/analytics/analytics-engine/) lets the platform write and query events by script tag, surfacing per-app usage metrics to individual users.
+Observability operates at two levels. At the platform level, [Workers Trace Events Logpush](/cloudflare-for-platforms/workers-for-platforms/configuration/observability/) enabled on the dispatch worker covers all current and future user workers in the namespace. The [GraphQL Analytics API](/analytics/graphql-api/) queries by `dispatchNamespaceName` for aggregate metrics across the platform. At the app level, [Tail Workers](/cloudflare-for-platforms/workers-for-platforms/configuration/observability/) can be attached to individual user workers for granular logging. [Workers Analytics Engine](/analytics/analytics-engine/) lets the platform write and query events by script tag, surfacing per-app usage metrics to individual users.
 
 ## Security model
 
@@ -74,5 +74,6 @@ Enterprise vibe coding platforms must assume that AI-generated code is untrusted
 - **Untrusted code execution:** AI-generated code may contain bugs, vulnerabilities, or unintended behavior. Sandboxes and containers isolate it from production systems.
 - **Data exfiltration via prompts:** Employees may inadvertently include sensitive data in prompts. AI Gateway and DLP inspect and block before prompts reach LLM providers.
 - **Prompt injection:** Malicious prompts may attempt to manipulate the AI into generating harmful code. All interactions are logged and auditable.
-- **Credential exposure:** AI-generated code never handles real secrets. Outbound workers inject credentials at the platform layer.
+- **Credential exposure:** AI-generated code never handles real secrets. Outbound handlers or outbound workers inject credentials at the platform layer.
 - **Privilege escalation:** Misconfigured bindings could give an application access to resources it should not reach. The binding model enforces allowlist-based connectivity.
+- **Unauthorized access:** Without identity controls, deployed applications could be accessed by anyone in the organization. Cloudflare Access enforces role-based policies on both the platform and its deployed applications.
