@@ -256,9 +256,6 @@ export default defineConfig({
 		skills(),
 	],
 	vite: {
-		server: {
-			allowedHosts: true,
-		},
 		resolve: {
 			alias: {
 				"./Page.astro": fileURLToPath(
