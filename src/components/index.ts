@@ -11,7 +11,6 @@ export { default as APIRequest } from "./APIRequest.astro";
 export { default as VibeCoreDiagram } from "./VibeCoreDiagram.astro";
 export { default as VibeDeployPipelineDiagram } from "./VibeDeployPipelineDiagram.astro";
 export { default as VibeDevPlaneDiagram } from "./VibeDevPlaneDiagram.astro";
-export { default as VibePlatformOverview } from "./VibePlatformOverview.astro";
 export { default as VibeProdPlaneDiagram } from "./VibeProdPlaneDiagram.astro";
 export { default as AutoconfigDiagram } from "./AutoconfigDiagram.astro";
 export { default as AvailableNotifications } from "./AvailableNotifications.astro";
