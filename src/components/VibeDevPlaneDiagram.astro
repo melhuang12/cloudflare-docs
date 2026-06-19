@@ -1,47 +1,113 @@
 ---
+
 ---
 
 <figure class="vibe-diagram" aria-label="Development plane architecture">
 	<div class="dev-map">
-		<a class="tile accent-tile" href="/cloudflare-one/policies/access/" title="Authenticates employees via corporate IdP and enforces who can build and what they can connect to">
+		<a
+			class="tile accent-tile"
+			href="/cloudflare-one/policies/access/"
+			title="Authenticates employees via corporate IdP and enforces who can build and what they can connect to"
+		>
 			Access
 		</a>
 
-		<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+		<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"
+			><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+			></path></svg
+		>
 
 		<div class="box">
 			<div class="box-label">Entrypoint</div>
 			<div class="box-items">
-				<a class="tile" href="/sandbox/" title="Web-based chat UI for non-technical builders">Frontend</a>
+				<a
+					class="tile"
+					href="/sandbox/"
+					title="Web-based chat UI for non-technical builders">Frontend</a
+				>
 				<span class="or-text">or</span>
-				<a class="tile" href="/containers/" title="CLI-based multi-agent orchestration for developers">Agent flow</a>
+				<a
+					class="tile"
+					href="/containers/"
+					title="CLI-based multi-agent orchestration for developers"
+					>Agent flow</a
+				>
 			</div>
-			<a class="tile sub-tile" href="/d1/" title="Stores platform metadata: user profiles, sessions, cost tags, department and team permissions">D1 (metadata)</a>
+			<a
+				class="tile sub-tile"
+				href="/d1/"
+				title="Stores platform metadata: user profiles, sessions, cost tags, department and team permissions"
+				>D1 (metadata)</a
+			>
 		</div>
 
-		<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+		<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"
+			><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+			></path></svg
+		>
 
 		<div class="box">
 			<div class="box-label">Execution</div>
-			<a class="tile wide-tile" href="/sandbox/" title="Sandboxed container running AI-generated code with preview URLs, real-time streaming, and fast startup">Container (Sandbox SDK)</a>
+			<a
+				class="tile wide-tile"
+				href="/sandbox/"
+				title="Sandboxed container running AI-generated code with preview URLs, real-time streaming, and fast startup"
+				>Container (Sandbox SDK)</a
+			>
 			<div class="box-row">
-				<a class="tile" href="/ai-gateway/" title="Routes to approved LLM providers, enforces budget caps, logs every prompt and response, integrates DLP">AI Gateway</a>
-				<a class="tile" href="/cloudflare-one/access-controls/ai-controls/mcp-portals/" title="Tracks MCP tool usage across agent interactions for visibility and audit">MCP Portal</a>
+				<a
+					class="tile"
+					href="/ai-gateway/"
+					title="Routes to approved LLM providers, enforces budget caps, logs every prompt and response, integrates DLP"
+					>AI Gateway</a
+				>
+				<a
+					class="tile"
+					href="/cloudflare-one/access-controls/ai-controls/mcp-portals/"
+					title="Tracks MCP tool usage across agent interactions for visibility and audit"
+					>MCP Portal</a
+				>
 			</div>
 		</div>
 
-		<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+		<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"
+			><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+			></path></svg
+		>
 
 		<div class="box">
 			<div class="box-label">Egress</div>
-			<a class="tile accent-tile wide-tile" href="/containers/platform-details/outbound-traffic/" title="Controls all egress, injects credentials so generated code never sees real secrets">Outbound Handler</a>
+			<a
+				class="tile accent-tile wide-tile"
+				href="/containers/platform-details/outbound-traffic/"
+				title="Controls all egress, injects credentials so generated code never sees real secrets"
+				>Outbound Handler</a
+			>
 			<div class="box-row">
-				<a class="tile sm-tile" href="/workers/runtime-apis/bindings/" title="Allowlist-based resource access enforced at the platform level">Bindings</a>
-				<a class="tile sm-tile" href="/hyperdrive/" title="Connect to non-Cloudflare databases">Hyperdrive</a>
+				<a
+					class="tile sm-tile"
+					href="/workers/runtime-apis/bindings/"
+					title="Allowlist-based resource access enforced at the platform level"
+					>Bindings</a
+				>
+				<a
+					class="tile sm-tile"
+					href="/hyperdrive/"
+					title="Connect to non-Cloudflare databases">Hyperdrive</a
+				>
 			</div>
 			<div class="box-row">
-				<a class="tile sm-tile" href="/cloudflare-one/connections/connect-networks/" title="Private connectivity to on-premises and internal systems">Tunnel</a>
-				<a class="tile sm-tile" href="#development-plane" title="Connect to approved third-party services">External APIs</a>
+				<a
+					class="tile sm-tile"
+					href="/cloudflare-one/connections/connect-networks/"
+					title="Private connectivity to on-premises and internal systems"
+					>Tunnel</a
+				>
+				<a
+					class="tile sm-tile"
+					href="#development-plane"
+					title="Connect to approved third-party services">External APIs</a
+				>
 			</div>
 		</div>
 	</div>
@@ -66,7 +132,10 @@
 		-webkit-font-smoothing: antialiased;
 		letter-spacing: -0.01em;
 	}
-	.vibe-diagram a { color: inherit; text-decoration: none; }
+	.vibe-diagram a {
+		color: inherit;
+		text-decoration: none;
+	}
 
 	.dev-map {
 		display: flex;
@@ -75,20 +144,33 @@
 		padding: 20px;
 		border: 1px solid var(--map-line);
 		border-radius: 12px;
-		background: radial-gradient(circle, var(--map-line) 1px, transparent 1px), var(--map-bg);
+		background:
+			radial-gradient(circle, var(--map-line) 1px, transparent 1px),
+			var(--map-bg);
 		background-size: 12px 12px;
 		overflow-x: auto;
 	}
 
 	.tile {
-		display: flex; align-items: center; justify-content: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		padding: 8px 14px;
-		border: 1px solid var(--map-line); border-radius: 9999px;
-		background: var(--map-card); box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
+		border: 1px solid var(--map-line);
+		border-radius: 9999px;
+		background: var(--map-card);
+		box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
 		color: var(--map-text);
-		font-family: "Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 12px; font-weight: 500; white-space: nowrap;
-		transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+		font-family:
+			"Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			monospace;
+		font-size: 12px;
+		font-weight: 500;
+		white-space: nowrap;
+		transition:
+			background-color 150ms ease,
+			border-color 150ms ease,
+			transform 150ms ease;
 	}
 	.tile:hover {
 		background: var(--map-overlay);
@@ -102,39 +184,88 @@
 		color: var(--map-blue-text);
 		padding: 12px 18px;
 	}
-	.accent-tile:hover { background: color-mix(in srgb, var(--map-blue-bg) 70%, var(--map-overlay)); }
+	.accent-tile:hover {
+		background: color-mix(in srgb, var(--map-blue-bg) 70%, var(--map-overlay));
+	}
 
-	.wide-tile { width: 100%; justify-content: center; }
-	.sub-tile { font-size: 11px; border-style: dashed; width: 100%; justify-content: center; margin-top: 6px; }
-	.sm-tile { font-size: 11px; padding: 6px 10px; flex: 1; justify-content: center; }
+	.wide-tile {
+		width: 100%;
+		justify-content: center;
+	}
+	.sub-tile {
+		font-size: 11px;
+		border-style: dashed;
+		width: 100%;
+		justify-content: center;
+		margin-top: 6px;
+	}
+	.sm-tile {
+		font-size: 11px;
+		padding: 6px 10px;
+		flex: 1;
+		justify-content: center;
+	}
 
 	.box {
-		display: flex; flex-direction: column; gap: 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
 		padding: 10px;
-		border: 1px solid var(--map-line); border-radius: 12px;
+		border: 1px solid var(--map-line);
+		border-radius: 12px;
 		background: var(--map-elevated);
 		flex-shrink: 0;
 		min-width: 160px;
 	}
 	.box-label {
 		color: var(--map-strong);
-		font-family: "Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 10px; font-weight: 500; text-transform: uppercase;
+		font-family:
+			"Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			monospace;
+		font-size: 10px;
+		font-weight: 500;
+		text-transform: uppercase;
 	}
 	.box-items {
-		display: flex; align-items: center; gap: 6px; justify-content: center;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		justify-content: center;
 	}
 	.box-row {
-		display: flex; gap: 6px;
+		display: flex;
+		gap: 6px;
 	}
-	.or-text { color: var(--map-subtle); font-size: 11px; font-style: italic; }
+	.or-text {
+		color: var(--map-subtle);
+		font-size: 11px;
+		font-style: italic;
+	}
 
-	.flow-arrow { width: 28px; height: 14px; flex-shrink: 0; }
-	.arrow { fill: none; stroke: var(--map-subtle); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+	.flow-arrow {
+		width: 28px;
+		height: 14px;
+		flex-shrink: 0;
+	}
+	.arrow {
+		fill: none;
+		stroke: var(--map-subtle);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
 
 	@media (max-width: 58rem) {
-		.dev-map { flex-direction: column; align-items: stretch; }
-		.flow-arrow { transform: rotate(90deg); align-self: center; }
-		.accent-tile { align-self: center; }
+		.dev-map {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		.flow-arrow {
+			transform: rotate(90deg);
+			align-self: center;
+		}
+		.accent-tile {
+			align-self: center;
+		}
 	}
 </style>

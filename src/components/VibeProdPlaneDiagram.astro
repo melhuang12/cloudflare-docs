@@ -1,27 +1,50 @@
 ---
+
 ---
 
 <figure class="vibe-diagram" aria-label="Production plane architecture">
 	<div class="prod-map">
 		<div class="access-boundary">
 			<div class="access-label">
-				<a href="/cloudflare-one/policies/access/" title="Protects the entire custom domain and everything downstream with corporate IdP authentication">Access (custom domain)</a>
+				<a
+					href="/cloudflare-one/policies/access/"
+					title="Protects the entire custom domain and everything downstream with corporate IdP authentication"
+					>Access (custom domain)</a
+				>
 			</div>
 
 			<div class="prod-flow">
-				<a class="tile accent-tile" href="/cloudflare-for-platforms/workers-for-platforms/configuration/dynamic-dispatch/" title="Routes requests to the correct user worker and enforces granular access controls matching user permissions to data scope">
+				<a
+					class="tile accent-tile"
+					href="/cloudflare-for-platforms/workers-for-platforms/configuration/dynamic-dispatch/"
+					title="Routes requests to the correct user worker and enforces granular access controls matching user permissions to data scope"
+				>
 					Dispatch Worker
 				</a>
 
-				<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+				<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"
+					><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+					></path></svg
+				>
 
-				<a class="tile" href="/cloudflare-for-platforms/workers-for-platforms/" title="Hosts the vibe-coded application in an isolated V8 isolate with per-tenant resource limits and zero idle cost">
+				<a
+					class="tile"
+					href="/cloudflare-for-platforms/workers-for-platforms/"
+					title="Hosts the vibe-coded application in an isolated V8 isolate with per-tenant resource limits and zero idle cost"
+				>
 					User Worker
 				</a>
 
-				<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+				<svg class="flow-arrow" viewBox="0 0 40 20" aria-hidden="true"
+					><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+					></path></svg
+				>
 
-				<a class="tile accent-tile" href="/cloudflare-for-platforms/workers-for-platforms/configuration/outbound-workers/" title="Controls all egress, injects secrets, enforces binding allowlists, and connects to external APIs, Hyperdrive, Workers VPC, and Tunnel">
+				<a
+					class="tile accent-tile"
+					href="/cloudflare-for-platforms/workers-for-platforms/configuration/outbound-workers/"
+					title="Controls all egress, injects secrets, enforces binding allowlists, and connects to external APIs, Hyperdrive, Workers VPC, and Tunnel"
+				>
 					Outbound Worker
 				</a>
 			</div>
@@ -48,13 +71,18 @@
 		-webkit-font-smoothing: antialiased;
 		letter-spacing: -0.01em;
 	}
-	.vibe-diagram a { color: inherit; text-decoration: none; }
+	.vibe-diagram a {
+		color: inherit;
+		text-decoration: none;
+	}
 
 	.prod-map {
 		padding: 20px;
 		border: 1px solid var(--map-line);
 		border-radius: 12px;
-		background: radial-gradient(circle, var(--map-line) 1px, transparent 1px), var(--map-bg);
+		background:
+			radial-gradient(circle, var(--map-line) 1px, transparent 1px),
+			var(--map-bg);
 		background-size: 12px 12px;
 	}
 
@@ -70,26 +98,44 @@
 	}
 	.access-label a {
 		color: var(--map-blue-text);
-		font-family: "Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 11px; font-weight: 500; text-transform: uppercase;
+		font-family:
+			"Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			monospace;
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: uppercase;
 	}
-	.access-label a:hover { text-decoration: underline; }
+	.access-label a:hover {
+		text-decoration: underline;
+	}
 
 	.prod-flow {
-		display: flex; align-items: center;
+		display: flex;
+		align-items: center;
 		gap: 12px;
 		justify-content: center;
 	}
 
 	.tile {
-		display: flex; align-items: center; justify-content: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		padding: 12px 18px;
-		border: 1px solid var(--map-line); border-radius: 9999px;
-		background: var(--map-card); box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
+		border: 1px solid var(--map-line);
+		border-radius: 9999px;
+		background: var(--map-card);
+		box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
 		color: var(--map-text);
-		font-family: "Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 12px; font-weight: 500; white-space: nowrap;
-		transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+		font-family:
+			"Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			monospace;
+		font-size: 12px;
+		font-weight: 500;
+		white-space: nowrap;
+		transition:
+			background-color 150ms ease,
+			border-color 150ms ease,
+			transform 150ms ease;
 	}
 	.tile:hover {
 		background: var(--map-overlay);
@@ -106,11 +152,26 @@
 		background: color-mix(in srgb, var(--map-blue-bg) 70%, var(--map-overlay));
 	}
 
-	.flow-arrow { width: 32px; height: 16px; flex-shrink: 0; }
-	.arrow { fill: none; stroke: var(--map-subtle); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+	.flow-arrow {
+		width: 32px;
+		height: 16px;
+		flex-shrink: 0;
+	}
+	.arrow {
+		fill: none;
+		stroke: var(--map-subtle);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
 
 	@media (max-width: 58rem) {
-		.prod-flow { flex-direction: column; gap: 8px; }
-		.flow-arrow { transform: rotate(90deg); }
+		.prod-flow {
+			flex-direction: column;
+			gap: 8px;
+		}
+		.flow-arrow {
+			transform: rotate(90deg);
+		}
 	}
 </style>

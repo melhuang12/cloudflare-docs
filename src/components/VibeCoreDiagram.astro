@@ -1,36 +1,73 @@
 ---
 const crossCutting = [
-	{ label: "Observability", href: "/analytics/", title: "Logs, metrics, and traces across all planes" },
-	{ label: "Cost attribution", href: "/ai-gateway/observability/costs/", title: "Token-level cost tracking attributed to teams and users" },
-	{ label: "Resource tagging", href: "/resource-tagging/", title: "Tags applied across the lifecycle for discoverability" },
+	{
+		label: "Observability",
+		href: "/analytics/",
+		title: "Logs, metrics, and traces across all planes",
+	},
+	{
+		label: "Cost attribution",
+		href: "/ai-gateway/observability/costs/",
+		title: "Token-level cost tracking attributed to teams and users",
+	},
+	{
+		label: "Resource tagging",
+		href: "/resource-tagging/",
+		title: "Tags applied across the lifecycle for discoverability",
+	},
 ];
 ---
 
-<figure class="vibe-diagram" aria-label="Enterprise vibe coding platform core architecture">
+<figure
+	class="vibe-diagram"
+	aria-label="Enterprise vibe coding platform core architecture"
+>
 	<div class="vibe-map">
-		<a class="plane-box" href="#development-plane" title="Where vibe coders create and iterate on applications through AI, with governed access to LLMs and enterprise data">
+		<a
+			class="plane-box"
+			href="#development-plane"
+			title="Where vibe coders create and iterate on applications through AI, with governed access to LLMs and enterprise data"
+		>
 			<span class="plane-icon" aria-hidden="true">🛠</span>
 			<span class="plane-label">Development plane</span>
 		</a>
 
-		<svg class="arrow-svg" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+		<svg class="arrow-svg" viewBox="0 0 40 20" aria-hidden="true"
+			><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+			></path></svg
+		>
 
-		<a class="plane-box" href="#deployment-pipeline" title="Approval and validation workflow that promotes applications from development to production">
+		<a
+			class="plane-box"
+			href="#deployment-pipeline"
+			title="Approval and validation workflow that promotes applications from development to production"
+		>
 			<span class="plane-icon" aria-hidden="true">🔀</span>
 			<span class="plane-label">Deployment pipeline</span>
 		</a>
 
-		<svg class="arrow-svg" viewBox="0 0 40 20" aria-hidden="true"><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"/></svg>
+		<svg class="arrow-svg" viewBox="0 0 40 20" aria-hidden="true"
+			><path d="M 0 10 L 30 10 M 24 4 L 32 10 L 24 16" class="arrow"
+			></path></svg
+		>
 
-		<a class="plane-box" href="#production-plane" title="Where approved applications run in isolated, multi-tenant environments with full observability and access controls">
+		<a
+			class="plane-box"
+			href="#production-plane"
+			title="Where approved applications run in isolated, multi-tenant environments with full observability and access controls"
+		>
 			<span class="plane-icon" aria-hidden="true">🚀</span>
 			<span class="plane-label">Production plane</span>
 		</a>
 
 		<div class="cross-bar">
-			{crossCutting.map((item) => (
-				<a class="cross-pill" href={item.href} title={item.title}>{item.label}</a>
-			))}
+			{
+				crossCutting.map((item) => (
+					<a class="cross-pill" href={item.href} title={item.title}>
+						{item.label}
+					</a>
+				))
+			}
 		</div>
 	</div>
 </figure>
@@ -51,7 +88,10 @@ const crossCutting = [
 		-webkit-font-smoothing: antialiased;
 		letter-spacing: -0.01em;
 	}
-	.vibe-diagram a { color: inherit; text-decoration: none; }
+	.vibe-diagram a {
+		color: inherit;
+		text-decoration: none;
+	}
 
 	.vibe-map {
 		display: grid;
@@ -62,46 +102,86 @@ const crossCutting = [
 		padding: 20px;
 		border: 1px solid var(--map-line);
 		border-radius: 12px;
-		background: radial-gradient(circle, var(--map-line) 1px, transparent 1px), var(--map-bg);
+		background:
+			radial-gradient(circle, var(--map-line) 1px, transparent 1px),
+			var(--map-bg);
 		background-size: 12px 12px;
 	}
 
 	.plane-box {
-		display: flex; flex-direction: column; align-items: center; justify-content: center;
-		gap: 8px; padding: 24px 16px;
-		border: 1px solid var(--map-line); border-radius: 12px;
-		background: var(--map-card); box-shadow: 0 5px 14px rgb(0 0 0 / 7%);
-		transition: border-color 150ms ease, transform 150ms ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 24px 16px;
+		border: 1px solid var(--map-line);
+		border-radius: 12px;
+		background: var(--map-card);
+		box-shadow: 0 5px 14px rgb(0 0 0 / 7%);
+		transition:
+			border-color 150ms ease,
+			transform 150ms ease;
 		min-height: 100px;
 	}
 	.plane-box:hover {
 		border-color: color-mix(in srgb, var(--map-brand) 50%, var(--map-line));
 		transform: translateY(-2px);
 	}
-	.plane-icon { font-size: 22px; }
+	.plane-icon {
+		font-size: 22px;
+	}
 	.plane-label {
 		color: var(--map-strong);
-		font-family: "Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 12px; font-weight: 500; text-transform: uppercase; text-align: center;
+		font-family:
+			"Paper Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+			monospace;
+		font-size: 12px;
+		font-weight: 500;
+		text-transform: uppercase;
+		text-align: center;
 	}
 
-	.arrow-svg { width: 32px; height: 16px; flex-shrink: 0; }
-	.arrow { fill: none; stroke: var(--map-subtle); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+	.arrow-svg {
+		width: 32px;
+		height: 16px;
+		flex-shrink: 0;
+	}
+	.arrow {
+		fill: none;
+		stroke: var(--map-subtle);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
 
 	.cross-bar {
 		grid-column: 1 / -1;
-		display: flex; align-items: center; justify-content: center;
-		flex-wrap: wrap; gap: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 8px;
 		padding: 10px 14px;
-		border: 1px solid var(--map-line); border-radius: 9999px;
-		background: var(--map-card); box-shadow: 0 5px 14px rgb(0 0 0 / 7%);
+		border: 1px solid var(--map-line);
+		border-radius: 9999px;
+		background: var(--map-card);
+		box-shadow: 0 5px 14px rgb(0 0 0 / 7%);
 	}
 	.cross-pill {
-		display: inline-flex; align-items: center; height: 26px; padding: 0 12px;
-		border: 1px solid var(--map-line); border-radius: 9999px;
+		display: inline-flex;
+		align-items: center;
+		height: 26px;
+		padding: 0 12px;
+		border: 1px solid var(--map-line);
+		border-radius: 9999px;
 		background: var(--map-elevated);
-		color: var(--map-subtle); font-size: 11px; font-weight: 500;
-		transition: background-color 150ms ease, border-color 150ms ease;
+		color: var(--map-subtle);
+		font-size: 11px;
+		font-weight: 500;
+		transition:
+			background-color 150ms ease,
+			border-color 150ms ease;
 	}
 	.cross-pill:hover {
 		background: var(--map-overlay);
@@ -113,6 +193,9 @@ const crossCutting = [
 			grid-template-columns: 1fr;
 			grid-template-rows: auto;
 		}
-		.arrow-svg { transform: rotate(90deg); justify-self: center; }
+		.arrow-svg {
+			transform: rotate(90deg);
+			justify-self: center;
+		}
 	}
 </style>
