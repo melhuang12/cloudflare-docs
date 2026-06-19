@@ -65,7 +65,7 @@ const stages = [
 						<div class="stage-box">
 							<div class="stage-label">{stage.label}</div>
 							<div class="stage-items">
-								{stage.items.map((item) => (
+								{stage.items!.map((item) => (
 									<a class="tile" href={item.href} title={item.title}>
 										{item.label}
 									</a>
